@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Genatic_Algorithm_Learning.iml" filepath="$PROJECT_DIR$/.idea/Genatic_Algorithm_Learning.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/heuristic_optimization_algorithm.iml" filepath="$PROJECT_DIR$/.idea/heuristic_optimization_algorithm.iml" />
     </modules>
   </component>
 </project>
