@@ -36,6 +36,7 @@ class problem:
         self.nconstraint = 0  #
         self.functionselect = 0  #
         self.mutationrate = 0.1  # Mutation rate
+        self.mutationrate2 = 0.1
         self.xmin = [-5.12 for i in range(self.nvariable)]
         self.xmax = [5.12 for i in range(self.nvariable)]
         self.ptype = 2
@@ -76,6 +77,7 @@ class GA(problem):
             sum += prb.bitlist[i]
 
     def decodingToptype(self, prb):
+        self.Ptype = []
         for i in range(prb.nvariable):
             a = prb.xmin[i] + (prb.xmax[i] - prb.xmin[i]) / (2 ** prb.bitlist[i] - 1) * self.Itype[i]
             self.Ptype.append(a)
@@ -117,14 +119,6 @@ def mutation(ind, prb, ichild):
                     ind[ichild].Gtype[j] = 1
                 else:
                     ind[ichild].Gtype[j] = 0
-
-        Flywheel = choiceOfsurvival(ind, prb)
-        Flywheel.sort()
-        for i in range(prb.npop):
-            j = Flywheel[i]
-            if j > i:
-                ind[i] = copy.deepcopy(ind[j])
-
 
 def functionMaker(x, ptype):
     f = 0
@@ -176,13 +170,13 @@ def choiceOfparents(ind, prb):
 
 
 def choiceOfsurvival(ind, prb):
-    fitness_scores = [individual.Fitness for individual in ind]
-    total_fitness = sum(fitness_scores)
-    probabilities = [score / total_fitness for score in fitness_scores]
-
-    # 使用轮盘赌算法选择存活个体
-    chosen_indices = np.random.choice(len(ind), size=prb.npop, p=probabilities, replace=False)
-    return chosen_indices.tolist()
+    Flywheel = makingflywheel(ind, prb, 1)
+    Flywheel.sort()
+    for i in range(prb.npop):
+        j = Flywheel[i]
+        if j > i:
+            ind[i] = copy.deepcopy(ind[j])
+    return ind
 
 
 if __name__ == '__main__':
@@ -269,3 +263,5 @@ if __name__ == '__main__':
             j = Flywheel[i]
             if j > i:
                 ind[i] = copy.deepcopy(ind[j])
+
+
