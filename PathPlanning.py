@@ -112,7 +112,7 @@ def path_penalty(obs, Px, Py):
 
     Reference: http://paulbourke.net/geometry/polygonmesh/
     """
-    err = np.zeros(Px.shape[0])
+    err = 0
     count = 0
 
     # Loop over all obstacle
@@ -169,7 +169,7 @@ def path_penalty(obs, Px, Py):
 
         # The penalty of each path is taken as the average penalty between its
         # inside and outside points
-        err += np.nanmean(penalty, axis=1)
+        err += np.nanmean(penalty, axis=0)
 
     return err, count
 
@@ -190,17 +190,19 @@ def path_length(X, args):
     ns = args[3]                # Number of points along the spline
     f_interp = args[4]          # Interpolation method
 
-    # nPop, nVar = X.shape
-    #nPts = nVar // 2            # Number of (internal) breakpoints
+    nPts = len(X) // 2
 
     # Coordinates of the breakpoints (start + internal + goal)
-    x = np.array([arr[0] for arr in X])
-    y = np.array([arr[1] for arr in X])
+    x = np.block([Xs, X[:nPts], Xg])
+    y = np.block([Ys, X[nPts:], Yg])
 
     # Classes defining the spline
-    t = np.linspace(0, 1, len(x))
-    CSx = interp1d(t, x, axis=1, kind=f_interp, assume_sorted=True)
-    CSy = interp1d(t, y, axis=1, kind=f_interp, assume_sorted=True)
+    t = np.linspace(0, 1, nPts+2)
+
+    # print(np.shape(X[:nPts]))
+    # print(len(t))
+    CSx = interp1d(t, x, axis=0, kind=f_interp, assume_sorted=True)
+    CSy = interp1d(t, y, axis=0, kind=f_interp, assume_sorted=True)
 
     # Coordinates of the discretized path
     s = np.linspace(0, 1, ns)
@@ -208,9 +210,9 @@ def path_length(X, args):
     Py = CSy(s)
 
     # Path length
-    dX = np.diff(Px, axis=1)
-    dY = np.diff(Py, axis=1)
-    L = np.sqrt(dX ** 2 + dY ** 2).sum(axis=1)
+    dX = np.diff(Px, axis=0)
+    dY = np.diff(Py, axis=0)
+    L = np.sqrt(dX ** 2 + dY ** 2).sum(axis=0)
 
     # Penalty values
     err, count = path_penalty(obs, Px, Py)

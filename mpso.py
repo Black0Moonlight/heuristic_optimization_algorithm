@@ -234,8 +234,7 @@ if __name__ == '__main__':
                 ind[i].v[j] = ww * ind[i].v[j] + cc1 * vv1 + cc2 * vv2  # Updates velocity
                 ind[i].x[j] = ind[i].x[j] + ind[i].v[j]  # Updates position
 
-            args = [prb.start, prb.end, layout.obs, prb.nv, f_interp]
-            ind[i].f = path_length(ind[i].x,args)
+            ind[i].f = functionmaker(ind[i].x)
             if ind[i].f < ind[i].fpbest:
                 # Updates particle's best known position and fitness
                 ind[i].fpbest = ind[i].f
