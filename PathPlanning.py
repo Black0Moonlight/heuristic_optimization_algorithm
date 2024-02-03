@@ -174,7 +174,7 @@ def path_penalty(obs, Px, Py):
     return err, count
 
 
-def path_lenght(X, args):
+def path_length(X, args):
     """
     Returns the function to minimize, i.e. the path length when there is
     not any obstacle violation.
@@ -190,15 +190,16 @@ def path_lenght(X, args):
     ns = args[3]                # Number of points along the spline
     f_interp = args[4]          # Interpolation method
 
-    nPop, nVar = X.shape
-    nPts = nVar // 2            # Number of (internal) breakpoints
+    # nPop, nVar = X.shape
+    #nPts = nVar // 2            # Number of (internal) breakpoints
 
     # Coordinates of the breakpoints (start + internal + goal)
-    x = np.block([Xs, X[:, :nPts], Xg])
-    y = np.block([Ys, X[:, nPts:], Yg])
+    x = np.array([arr[0] for arr in X])
+    y = np.array([arr[1] for arr in X])
 
     # Classes defining the spline
-    t = np.linspace(0, 1, nPts+2)
+    t = np.linspace(0, 1, len(x))
+    print(t)
     CSx = interp1d(t, x, axis=1, kind=f_interp, assume_sorted=True)
     CSy = interp1d(t, y, axis=1, kind=f_interp, assume_sorted=True)
 
@@ -383,38 +384,6 @@ class PathPlanning:
         Removes an obstacle from the list.
         """
         _ = self.obs.pop(idx)
-
-    def optimize(self, nPts=3, ns=100, nPop=40, epochs=500, K=0, phi=2.05,
-                 vel_fact=0.5, conf_type='RB', IntVar=None, normalize=False,
-                 rad=0.1, f_interp='cubic', Xinit=None):
-        """
-        Optimizes the path.
-        """
-        # Arguments passed to the function to minimize (<args> has five items)
-        Xs = np.ones((nPop, 1)) * self.start[0]   # Start x-position (as array)
-        Ys = np.ones((nPop, 1)) * self.start[1]   # Start y-position (as array)
-        Xg = np.ones((nPop, 1)) * self.goal[0]    # Goal x-position (as array)
-        Yg = np.ones((nPop, 1)) * self.goal[1]    # Goal y-position (as array)
-        args = [(Xs, Ys), (Xg, Yg),  self.obs, ns, f_interp]
-
-        # Boundaries of the search space
-        nVar = 2 * nPts
-        UB = np.zeros(nVar)
-        LB = np.zeros(nVar)
-        LB[:nPts] = self.limits[0]
-        UB[:nPts] = self.limits[1]
-        LB[nPts:] = self.limits[2]
-        UB[nPts:] = self.limits[3]
-
-        # Optimize
-        X, info = PSO(path_lenght, LB, UB, nPop, epochs, K, phi, vel_fact,
-                      conf_type, IntVar, normalize, rad, args, Xinit)
-
-        # Get the results for the best path (<args> has six items)
-        args = [self.start, self.goal,  self.obs, ns, f_interp, []]
-        F = path_lenght(X.reshape(1, nVar), args)
-        L, count, Px, Py = args[5]
-        self.sol = (X, L[0], count, Px, Py)
 
     def plot_obs(self, ax):
         """
