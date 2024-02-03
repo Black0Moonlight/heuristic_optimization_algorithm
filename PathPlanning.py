@@ -199,7 +199,6 @@ def path_length(X, args):
 
     # Classes defining the spline
     t = np.linspace(0, 1, len(x))
-    print(t)
     CSx = interp1d(t, x, axis=1, kind=f_interp, assume_sorted=True)
     CSy = interp1d(t, y, axis=1, kind=f_interp, assume_sorted=True)
 

@@ -208,7 +208,6 @@ if __name__ == '__main__':
             next_point = xtemp[-1] + direction
             xtemp.append(next_point)
         xtemp.append(np.array(prb.end))
-        print(xtemp)
 
         ind[i].x = copy.deepcopy(xtemp)
         ind[i].f = functionmaker(ind[i].x)
