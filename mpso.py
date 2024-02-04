@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import decimal
 from copy import deepcopy
-from PathPlanning import *
+from PathPlanning2 import *
 
 decimal.getcontext().prec = 100  # Sets the precision of decimal arithmetic to 100 digits
 random.seed(0)

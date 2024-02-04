@@ -2,17 +2,16 @@
 '''
  ------------------------------------------------------------------
  @File Name:        mpso-3
- @Created:          2024/2/4 16:22
+ @Created:          2024/2/4 15:42
  @Software:         PyCharm
 
  @Author:           Jiayu ZENG
  @Email:            jiayuzeng123@gmail.com
 
- @Description:      used as the basic compare
+ @Description:      optimize from mpos-2
 
  ------------------------------------------------------------------
 '''
-
 
 import csv
 import copy
@@ -24,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import decimal
 from copy import deepcopy
-from PathPlanning2 import *
+from PathPlanning3 import *
 
 decimal.getcontext().prec = 100  # Sets the precision of decimal arithmetic to 100 digits
 random.seed(0)

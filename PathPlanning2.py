@@ -199,8 +199,6 @@ def path_length(X, args):
     # Classes defining the spline
     t = np.linspace(0, 1, nPts+2)
 
-    # print(np.shape(X[:nPts]))
-    # print(len(t))
     CSx = interp1d(t, x, axis=0, kind=f_interp, assume_sorted=True)
     CSy = interp1d(t, y, axis=0, kind=f_interp, assume_sorted=True)
 
@@ -451,7 +449,7 @@ class PathPlanning:
         Py = self.sol[4]
 
         # Plot the spline
-        ax.plot(Px[0, :], Py[0, :], lw=0.50, c='r')
+        ax.plot(Px, Py, lw=0.50, c='r')
 
         # Plot the internal breakpoints
         X = self.sol[0]
