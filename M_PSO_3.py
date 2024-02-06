@@ -2,29 +2,26 @@
 '''
  ------------------------------------------------------------------
  @File Name:        mpso-3
- @Created:          2024/2/4 16:22
+ @Created:          2024/2/4 15:42
  @Software:         PyCharm
 
  @Author:           Jiayu ZENG
  @Email:            jiayuzeng123@gmail.com
 
- @Description:      used as the basic compare
+ @Description:      optimize from mpos-2
 
  ------------------------------------------------------------------
 '''
 
-
-import csv
 import copy
 import math
-import statistics
 import time
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 import decimal
 from copy import deepcopy
-from PathPlanning2 import *
+from M_PathPlanning_3 import *
 
 decimal.getcontext().prec = 100  # Sets the precision of decimal arithmetic to 100 digits
 random.seed(0)
@@ -97,7 +94,7 @@ def plot_graph(prb, iteration, f, mode):
     title = "w=" + str("{:.2f}".format(prb.iw)) + ", c1=" + str("{:.2f}".format(prb.ic1))\
             + ", c2=" + str("{:.2f}".format(prb.ic2))
     ax.text(xt, yt-0.2, title, fontsize=10)
-      # 暂停一段时间
+
     if mode == 0:
         # start
         layout.plot_obs(ax)

@@ -8,7 +8,7 @@
  @Author:           Jiayu ZENG
  @Email:            jiayuzeng123@gmail.com
  
- @Description:      
+ @Description:      运行在自己写的环境
 
  ------------------------------------------------------------------
 '''
@@ -44,8 +44,8 @@ def in_obstacle(point, obstacles):
 
 
 # 地图的边界值
-BOUNDARY_X = (0, 6)
-BOUNDARY_Y = (0, 6)
+BOUNDARY_X = (-1, 6)
+BOUNDARY_Y = (-1, 6)
 
 # 定义适应度函数
 def attractive_potential(current_point, goal_point, scale=1):
@@ -69,22 +69,40 @@ def repulsive_potential(current_point, obstacle_point, obstacle_radius, influenc
 
 def fitness(path, obstacles, influence_radius=1):
     total_potential = 0
-    # 对路径上的每个点计算总势能
+    angle_penalty = 0
+    distance_penalties = 0
     for point in path:
-        # 计算吸引势能，假设目标点是已知的
+        # Attracted potential energy
         total_potential += attractive_potential(point, end_point)
 
-        # 计算障碍物的排斥势能
+        # Repelling potential energy
         for center, radius in obstacles:
             rep_potential = repulsive_potential(point, np.array(center), radius, influence_radius)
             if rep_potential == float('inf'):
-                return float('inf')  # 如果点在障碍物内，返回无穷大的适应度值
+                return float('inf')
             total_potential += rep_potential
 
-    # 路径长度作为额外的适应度值，鼓励更短的路径
+    # length
     path_length = sum(np.linalg.norm(np.array(path[i]) - np.array(path[i - 1])) for i in range(1, len(path)))
 
-    return total_potential + path_length
+    # Calculate distances between consecutive points and their variance as penalty
+    distances = [np.linalg.norm(np.array(path[i]) - np.array(path[i - 1])) for i in range(1, len(path))]
+    mean_distance = np.mean(distances)
+    distance_var = np.mean([(d - mean_distance) ** 2 for d in distances])
+    distance_penalties = distance_var * 0
+
+    # angle penalty
+    for i in range(1, len(path) - 1):
+        vector1 = np.array(path[i]) - np.array(path[i - 1])
+        vector2 = np.array(path[i + 1]) - np.array(path[i])
+        if np.linalg.norm(vector1) > 0 and np.linalg.norm(vector2) > 0:
+            cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            cos_angle = np.clip(cos_angle, -1.0, 1.0)
+            angle = np.arccos(cos_angle)
+            if not np.isclose(angle, 0):
+                angle_penalty += (1 - cos_angle) * 1
+
+    return total_potential + path_length + angle_penalty + distance_penalties
 
 
 # 定义PSO中的粒子
@@ -92,41 +110,29 @@ class Particle:
     def __init__(self, start, end, num_points=10):
         self.num_points = num_points
         self.positions = [np.array(start)]
-        # 计算起点到终点的向量
-        line_vector = np.array(end) - np.array(start)
-        # 生成一系列沿着起点到终点直线的点
-        for i in range(1, num_points - 1):
-            # 在起点和终点之间线性插值来找到新的点
-            t = i / (num_points - 1)
-            point_on_line = np.array(start) + t * line_vector
-            # 添加一个小的随机偏移量
-            offset = (np.random.rand(2) - 0.5) * 0.1  # 调整偏移量的大小，保证点不会偏离太远
-            next_point = point_on_line + offset
-            # 确保点仍然在设定的距离范围内（0.1到1之间）
-            self.positions.append(self._clamp_point(next_point, self.positions[-1], 0.1, 1))
+        while len(self.positions) < num_points - 1:
+            next_point = self.positions[-1] + (np.random.rand(2) - 0.5)
+            if len(self.positions) > 1:  # 至少有两个点时才检查角度
+                vector1 = self.positions[-2] - self.positions[-1]
+                vector2 = next_point - self.positions[-1]
+                if np.linalg.norm(vector1) > 0 and np.linalg.norm(vector2) > 0:
+                    cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+                    # 如果角度大于90度，重新生成点
+                    if cos_angle < 0:  # cos(90°) = 0，cos(角度)小于0意味着角度大于90°
+                        continue  # 重新生成这个点
+            self.positions.append(next_point)
         self.positions.append(np.array(end))
         # 初始化速度为零
         self.velocity = [np.zeros(2) for _ in range(num_points)]
         self.best_position = copy.deepcopy(self.positions)
         self.best_fitness = float('inf')
 
-    def _clamp_point(self, point, reference, min_dist, max_dist):
-        """确保点与参考点之间的距离在[min_dist, max_dist]范围内"""
-        direction = point - reference
-        distance = np.linalg.norm(direction)
-        if distance < min_dist:
-            return reference + direction / distance * min_dist
-        elif distance > max_dist:
-            return reference + direction / distance * max_dist
-        else:
-            return point
-
     def update_position(self):
         # 更新除了起点和终点外的所有点
         for i in range(1, self.num_points - 1):
             self.positions[i] += self.velocity[i]
 
-    def update_velocity(self, global_best_position, w=0.5, c1=1.0, c2=1.5):
+    def update_velocity(self, global_best_position, w=0.8, c1=0.35, c2=1.5):
         for i in range(1, self.num_points - 1):  # 不更新起点和终点的速度
             r1, r2 = np.random.rand(2)
             cognitive_velocity = c1 * r1 * (np.array(self.best_position[i]) - np.array(self.positions[i]))
@@ -149,7 +155,7 @@ def plot_path(obstacles, path, start, end, iteration, close):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.axis('equal')
-    plt.pause(0.001)  # 暂停一段时间，不然画的太快会卡住显示不出来
+    plt.pause(0.001)
     if close:
         plt.ioff()
     else:
@@ -158,7 +164,7 @@ def plot_path(obstacles, path, start, end, iteration, close):
 
 # 初始化粒子群
 num_particles = 50
-num_points = 40
+num_points = 20
 particles = [Particle(np.array(start_point), np.array(end_point), num_points) for _ in range(num_particles)]
 global_best_position = copy.deepcopy(particles[0].positions)
 global_best_fitness = float('inf')

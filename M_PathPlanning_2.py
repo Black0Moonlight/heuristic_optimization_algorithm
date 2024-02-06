@@ -50,7 +50,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse, Circle, Polygon
-from pso import PSO
+from E_PSO import PSO
 
 
 def build_Xinit(start, goal, nPts):
