@@ -24,7 +24,7 @@ from copy import deepcopy
 from M_PathPlanning_3 import *
 
 decimal.getcontext().prec = 100  # Sets the precision of decimal arithmetic to 100 digits
-random.seed(0)
+# random.seed(0)
 
 plt.ion()
 plt.plot()
@@ -34,19 +34,18 @@ class Problem:
     def __init__(self):
         self.gmax = 300  # Maximum number of generations
         self.np = 50  # Number of particles
-        self.nv = 20  # Number of points (variant) on the path
+        self.nv = 10  # Number of points (variant) on the path
 
         self.start = (0, 0)
         self.end = (5, 5)
         self.Ub = [6 for _ in range(self.nv*2)]  # Upper bound for each variable
         self.Lb = [-1 for _ in range(self.nv*2)]  # Lower bound for each variable
 
-        self.nPts = 10
+        self.nPds = 1 + (self.nv + 1) * 50
         self.f_interp = 'quadratic'
-        self.Xinit = build_Xinit(self.start, self.end, self.nPts)
 
-        self.iw = 0.8  # Inertia weight
-        self.ic1 = 0.35  # Cognitive coefficient
+        self.iw = 1.45  # Inertia weight
+        self.ic1 = 0.25  # Cognitive coefficient
         self.ic2 = 1.5  # Social coefficient
         # [x y]
         self.v0 = [0 for _ in range(self.nv*2)]  # Initial velocity vector for all particles
@@ -189,7 +188,7 @@ class PSO:
 
 def functionmaker(x, args=0):
     if args == 0:
-        args = [prb.start, prb.end, layout.obs, prb.nv, prb.f_interp]
+        args = [prb.start, prb.end, layout.obs, prb.nPds, prb.f_interp]
     f = path_length(x, args)
     return f
 
@@ -211,14 +210,6 @@ if __name__ == '__main__':
         ind[i].v = copy.deepcopy(prb.v0)
 
         xtemp = np.array([random.uniform(ind[i].Lb[j], ind[i].Ub[j]) for j in range(prb.nv*2-4)])
-
-        # xtemp = [np.array(prb.start)]
-        # for _ in range(1, prb.nv - 1):
-        #     direction = np.random.rand(2) - 0.5
-        #     direction /= np.linalg.norm(direction)
-        #     next_point = xtemp[-1] + direction
-        #     xtemp.append(next_point)
-        # xtemp.append(np.array(prb.end))
 
         ind[i].x = copy.deepcopy(xtemp)
         ind[i].f = functionmaker(ind[i].x)

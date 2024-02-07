@@ -1,50 +1,3 @@
-"""
-Path Planning Using Particle Swarm Optimization
-
-
-Implementation of particle swarm optimization (PSO) for path planning when the
-environment is known.
-
-
-Copyright (c) 2021 Gabriele Gilardi
-
-
-Main Quantities
----------------
-start           Start coordinates.
-goal            Goal coordinates.
-limits          Lower and upper boundaries of the layout.
-obs             List containing the obstacles parameters.
-f_interp        Type of spline (slinear, quadratic, cubic).
-nPts            Number of internal points defining the spline.
-Px, Py          Spline coordinates.
-L               Path length.
-F               Function to minimize.
-err             Penalty term.
-count           Number of violated obstacles.
-sol             Tuple containing the solution.
-ns              Number of points defining the spline.
-X               Array of variables.
-Xinit           Initial value of the variables.
-LB              Lower boundaries of the search space.
-UB              Upper boundaries of the search space.
-nVar            Number of variables (equal to twice nPts).
-nPop            Number of agents (one for each path).
-epochs          Number of iterations.
-K               Average size of each agent's group of informants.
-phi             Coefficient to calculate the two confidence coefficients.
-vel_fact        Velocity factor to calculate the maximum and the minimum
-                allowed velocities.
-conf_type       Confinement type (on the velocities).
-IntVar          List of indexes specifying which variable should be treated
-                as integers.
-normalize       Specifies if the search space should be normalized (to
-                improve convergency).
-rad             Normalized radius of the hypersphere centered on the best
-                particle.
-args            List containing the parameters needed for the calculation of
-                the function to minimize.
-"""
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -213,8 +166,27 @@ def path_length(X, args):
     # Penalty values
     err, count = path_penalty(obs, Px, Py)
 
+    BOUNDARY_X = (-1, 6)
+    BOUNDARY_Y = (-1, 6)
+    limit_penalty=0
+    for i in range(len(x)):
+        if not (BOUNDARY_X[0] <= x[i] <= BOUNDARY_X[1]) or not (BOUNDARY_Y[0] <= y[i] <= BOUNDARY_Y[1]):
+            limit_penalty += 100
+
+    # angle penalty
+    angle_penalty = 0
+    for i in range(1, len(x) - 1):
+        vector1 = [np.array(x[i]) - np.array(x[i - 1]),np.array(y[i]) - np.array(y[i - 1])]
+        vector2 = [np.array(x[i + 1]) - np.array(x[i]),np.array(y[i + 1]) - np.array(y[i])]
+        if np.linalg.norm(vector1) > 0 and np.linalg.norm(vector2) > 0:
+            cos_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+            cos_angle = np.clip(cos_angle, -1.0, 1.0)
+            angle = np.arccos(cos_angle)
+            if not np.isclose(angle, 0):
+                angle_penalty += (1 - cos_angle)
+
     # Function to minimize
-    F = L * (1.0 + err)
+    F = L * (1.0 + err * 15 + angle_penalty * 0.2) + limit_penalty
 
     # Return the results for the best path if it is the last call
     if (len(args) == 6):
